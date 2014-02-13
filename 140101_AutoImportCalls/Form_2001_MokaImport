@@ -45,11 +45,16 @@ If Not IsNull(Me!RunNumber) Then
     DoCmd.SetWarnings False
     DoCmd.RunSQL S
     
-    ''update import flag to 5 for array tests to be excluded from autoimport
+    ''update import flag to 5 for array tests to be excluded from autoimport finding referral ids that DON'T match
+    ''the ones we do want to import - this gets around the problem of new referral categories being auto imported
+    ''by default
     S = "UPDATE ArrayIntervals INNER JOIN ArrayTest ON ArrayTest.DNALabellingID = ArrayIntervals.DNALabellingID " & _
     "SET ArrayIntervals.Import = 5 " & _
-    "WHERE (((ArrayTest.ReferralID)=1199901172 Or (ArrayTest.ReferralID)=1199901174 Or (ArrayTest.ReferralID)=1199901177 Or " & _
-    "(ArrayTest.ReferralID)=1199901185 OR (ArrayTest.ReferralID)=1199901175) AND ((ArrayIntervals.Import)=1))"
+    "WHERE (ArrayTest.ReferralID<>2 AND ArrayTest.ReferralID<>1185356884 AND ArrayTest.ReferralID<>1185356886 " & _
+    "AND ArrayTest.ReferralID<>1199901176 AND ArrayTest.ReferralID<>1199901171 AND ArrayTest.ReferralID<>1199901183 " & _
+    "AND ArrayTest.ReferralID<>1199901169 AND ArrayTest.ReferralID<>1199901181 AND ArrayTest.ReferralID<>1199901182 " & _
+    "AND ArrayTest.ReferralID<>1199901187 AND ArrayTest.ReferralID<>1199901148 AND ArrayTest.ReferralID<>9 " & _
+    "AND ArrayIntervals.Import=1)"
     DoCmd.RunSQL S
     
     ''transfer data that is for export to moka database
@@ -58,7 +63,7 @@ If Not IsNull(Me!RunNumber) Then
     "FROM ArrayIntervals " & _
     "WHERE ArrayIntervals.Import = 1"
     DoCmd.RunSQL S
-    
+
     ''update import flag in IntervalsToMoka Intervals table to show that the data was transferred
     ''intervals.import updated to 2 to signify that it has been exported
     S = "UPDATE ArrayIntervals SET ArrayIntervals.Import = 2, ArrayIntervals.ExportDate = #" & d & "# WHERE ArrayIntervals.Import = 1"
