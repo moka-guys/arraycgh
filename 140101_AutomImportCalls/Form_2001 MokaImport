@@ -1,0 +1,74 @@
+Option Compare Database
+
+Private Sub Command12_Click()
+
+If Not IsNull(Me!RunNumber) Then
+
+    Dim h As String
+    Dim Y As String
+    Dim p As String
+    Dim d As String
+    Dim S As String
+    Dim t As String
+    Dim wsh As Object
+    Set wsh = VBA.CreateObject("WScript.Shell")
+    Dim waitOnReturn As Boolean: waitOnReturn = True
+    Dim windowStyle As Integer: windowStyle = 1
+    Dim errorCode As Integer
+    
+    ''take hybid from form
+    h = Me.RunNumber
+
+    ''run python script providing the run number as the argument
+    'Call shell("cmd.exe /S /C" & "F:\Moka\Files\Analysis\IntervalsToMoka\IntervalsToMoka.py " & h, vbNormalFocus)
+    ''added wait function
+    wsh.Run "cmd.exe /S /C" & "F:\Moka\Files\Analysis\IntervalsToMoka\IntervalsToMoka.py " & h, windowStyle, waitOnReturn
+    
+    ''year
+    Y = "20" & Left(h, 2)
+    
+    ''use hybid to inform filename
+    p = "F:\Moka\Files\Analysis\" & Y & "\" & h & "\" & h & "_IFM.csv"
+    
+    'testing MsgBox p
+    
+    ''import file
+    'DoCmd.TransferText acImportDelim, "IFM_spec", "Intervals_" & h, p, yes
+    DoCmd.TransferText acImportDelim, "IFM_spec", "ArrayIntervals", p, yes
+    
+    ''timestamp
+    d = Format(Now, "dd/mm/yyyy Hh:Nn:ss")
+    
+    ''update import field to 1 (from null) and enter timestamp
+    ''intervals.import is updated to 1 to signify that it has been imported and should be exported
+    S = "UPDATE ArrayIntervals SET ArrayIntervals.Import = 1, ArrayIntervals.ImportDate = #" & d & "# WHERE ArrayIntervals.Import is null"
+    DoCmd.SetWarnings False
+    DoCmd.RunSQL S
+    
+    ''update import flag to 5 for array tests to be excluded from autoimport
+    S = "UPDATE ArrayIntervals INNER JOIN ArrayTest ON ArrayTest.DNALabellingID = ArrayIntervals.DNALabellingID " & _
+    "SET ArrayIntervals.Import = 5 " & _
+    "WHERE (((ArrayTest.ReferralID)=1199901172 Or (ArrayTest.ReferralID)=1199901174 Or (ArrayTest.ReferralID)=1199901177 Or " & _
+    "(ArrayTest.ReferralID)=1199901185 OR (ArrayTest.ReferralID)=1199901175) AND ((ArrayIntervals.Import)=1))"
+    DoCmd.RunSQL S
+    
+    ''transfer data that is for export to moka database
+    S = "INSERT INTO ArrayOligoPreliminaryResults (InternalPatientID, DNALabellingID, Ratio_1, ChrID19, Band19, Start19, Stop19, Probes, AutoImport)" & _
+    "SELECT InternalPatientID, DNALabellingID, Ratio, Chr19, Band19, Start19, Stop19, Probes, Import " & _
+    "FROM ArrayIntervals " & _
+    "WHERE ArrayIntervals.Import = 1"
+    DoCmd.RunSQL S
+    
+    ''update import flag in IntervalsToMoka Intervals table to show that the data was transferred
+    ''intervals.import updated to 2 to signify that it has been exported
+    S = "UPDATE ArrayIntervals SET ArrayIntervals.Import = 2, ArrayIntervals.ExportDate = #" & d & "# WHERE ArrayIntervals.Import = 1"
+    DoCmd.RunSQL S
+    
+    DoCmd.SetWarnings True
+    
+Else
+    MsgBox "Please enter a run number", , "Don't be a dummy"
+    
+End If
+
+End Sub
