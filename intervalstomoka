@@ -25,6 +25,13 @@ Usage:
     in F:\Moka\Files\Analysis\Year\Run\
     This will output a file called RunNumber + _IFM.csv
     in F:\Moka\Files\Analysis\Year\Run\
+
+Actual usage:    
+    Moka-Analytics-Auto-import calls
+    This will open a form that requests a run number
+    Enter the run number and click import
+    This calls this python script and 
+    
 """
 
 import pandas as pd
