@@ -1,2 +1,5 @@
 arraycgh
 ========
+
+TEST version
+OK
