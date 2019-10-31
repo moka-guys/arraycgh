@@ -228,7 +228,9 @@ rowcount=0
 for part in df3.AbNO:
     innerrow=0
     for row in dfcy.HybID:
-        if row == part:
+        # HybID in dbo.v_DNALabellingHybPatients now has DSLR appended to it, whereas it doesn't in the IntervalBasedReport excel, so use startswith instead of ==
+        # For safety also checks HybID in 'part' isn't empty string (not sure if that can ever happen, but if it did it would mean it would match every string when using 'startswith' which would be bad)
+        if part and row.startswith(part):
             InternalPatientID.extend([dfcy.Cy3InternalPatientID[innerrow], dfcy.Cy5InternalPatientID[innerrow]])
             DNALabellingID.extend([dfcy.DNALabellingID[innerrow]]*2)
             Ratio.extend([-df3.AmpDel[rowcount], df3.AmpDel[rowcount]])
